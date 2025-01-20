@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/urfave/cli/v3"
 )
@@ -27,6 +28,17 @@ type Metadata struct {
 type FileContent struct {
 	Boards   []Board  `json:"boards"`
 	Metadata Metadata `json:"_metadata"`
+}
+
+type ByVendorThenName []Board
+
+func (b ByVendorThenName) Len() int      { return len(b) }
+func (b ByVendorThenName) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
+func (b ByVendorThenName) Less(i, j int) bool {
+	if b[i].Vendor == b[j].Vendor {
+		return b[i].Name < b[j].Name
+	}
+	return b[i].Vendor < b[j].Vendor
 }
 
 const (
@@ -63,15 +75,18 @@ func main() {
 				},
 				Action: func(ctx context.Context, command *cli.Command) error {
 					path := command.String(flagDirectory)
-					c, err := readDirectory(path)
+					merged, err := readDirectory(path)
 					if err != nil {
 						log.Fatal(err)
 					}
 
+					sort.Sort(ByVendorThenName(merged.Boards))
+					populateMetadata(&merged)
+
 					outputFile := command.String(flagOutput)
 					if outputFile == "" {
 					}
-					err = writeFile(outputFile, c)
+					err = writeFile(outputFile, merged)
 					return nil
 				},
 			},
@@ -80,6 +95,15 @@ func main() {
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func populateMetadata(c *FileContent) {
+	vendorsMp := make(map[string]struct{})
+	for _, board := range c.Boards {
+		vendorsMp[board.Vendor] = struct{}{}
+	}
+	c.Metadata.TotalVendors = len(vendorsMp)
+	c.Metadata.TotalBoards = len(c.Boards)
 }
 
 func readDirectory(path string) (FileContent, error) {
