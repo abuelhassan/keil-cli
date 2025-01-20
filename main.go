@@ -29,6 +29,14 @@ type FileContent struct {
 	Metadata Metadata `json:"_metadata"`
 }
 
+const (
+	// Flag names
+	flagDirectory = "dir"
+	flagOutput    = "out"
+
+	defaultOutputFile = "output.json"
+)
+
 func main() {
 	cmd := &cli.Command{
 		Name:  "keil",
@@ -39,21 +47,31 @@ func main() {
 				Usage: "Merges boards metadata from json files into one file",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "dir",
+						Name:     flagDirectory,
 						Usage:    "Single directory with all files to be merged",
 						Aliases:  []string{"d"},
 						OnlyOnce: true,
 						Required: true,
 					},
+					&cli.StringFlag{
+						Name:     flagOutput,
+						Usage:    "Output file name",
+						Value:    defaultOutputFile,
+						Aliases:  []string{"o"},
+						OnlyOnce: true,
+					},
 				},
 				Action: func(ctx context.Context, command *cli.Command) error {
-					path := command.String("dir")
+					path := command.String(flagDirectory)
 					c, err := readDirectory(path)
 					if err != nil {
 						log.Fatal(err)
 					}
 
-					err = writeFile("output.json", c)
+					outputFile := command.String(flagOutput)
+					if outputFile == "" {
+					}
+					err = writeFile(outputFile, c)
 					return nil
 				},
 			},
@@ -89,16 +107,16 @@ func readDirectory(path string) (FileContent, error) {
 	return merged, nil
 }
 
-func writeFile(path string, c FileContent) error {
+func writeFile(filename string, c FileContent) error {
 	// TODO: Indentation can be optional based on a flag
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return fmt.Errorf("couldn't marshal output %v", err)
 	}
 
-	err = os.WriteFile("output.json", data, fs.ModePerm)
+	err = os.WriteFile(filename, data, fs.ModePerm)
 	if err != nil {
-		return fmt.Errorf("couldn't write file %s. %v", path, err)
+		return fmt.Errorf("couldn't write file %s. %v", filename, err)
 	}
 	return nil
 }
