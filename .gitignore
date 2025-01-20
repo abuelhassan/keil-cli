@@ -2,5 +2,5 @@
 .idea
 
 # Executable
-keil-cli
+keil
 output.json
