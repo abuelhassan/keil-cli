@@ -46,7 +46,7 @@ const (
 	flagDirectory = "dir"
 	flagOutput    = "out"
 
-	defaultOutputFile = "output.json"
+	defaultOutputFile = "out.json"
 )
 
 func main() {
@@ -85,6 +85,7 @@ func main() {
 
 					outputFile := command.String(flagOutput)
 					if outputFile == "" {
+						outputFile = defaultOutputFile
 					}
 					err = writeFile(outputFile, merged)
 					return nil
