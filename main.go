@@ -7,8 +7,9 @@ import (
 	"io/fs"
 	"log"
 	"os"
-	"path/filepath"
 	"sort"
+
+	"github.com/abuelhassan/keil-cli/reader"
 
 	"github.com/urfave/cli/v3"
 )
@@ -50,6 +51,7 @@ const (
 )
 
 func main() {
+	rdr := reader.New()
 	cmd := &cli.Command{
 		Name:  "keil",
 		Usage: "Manages development boards on Arm Keil system",
@@ -75,7 +77,16 @@ func main() {
 				},
 				Action: func(ctx context.Context, command *cli.Command) error {
 					path := command.String(flagDirectory)
-					merged, err := readDirectory(path)
+					boards := make([]Board, 0)
+					err := rdr.ReadDirectory(path, func(filePath string, data []byte) {
+						c := FileContent{}
+						err := json.Unmarshal(data, &c)
+						if err != nil {
+							log.Fatalf("couldn't parse file %s. %v", filePath, err)
+						}
+						boards = append(boards, c.Boards...)
+					})
+					merged := FileContent{Boards: boards}
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -105,31 +116,6 @@ func populateMetadata(c *FileContent) {
 	}
 	c.Metadata.TotalVendors = len(vendorsMp)
 	c.Metadata.TotalBoards = len(c.Boards)
-}
-
-func readDirectory(path string) (FileContent, error) {
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		return FileContent{}, fmt.Errorf("couldn't read directory %s. %v", path, err)
-	}
-
-	merged := FileContent{}
-	for _, e := range entries {
-		data, err := os.ReadFile(filepath.Join(path, e.Name()))
-		if err != nil {
-			return FileContent{}, fmt.Errorf("couldn't read file %s. %v", e.Name(), err)
-		}
-
-		c := FileContent{}
-		err = json.Unmarshal(data, &c)
-		if err != nil {
-			return FileContent{}, fmt.Errorf("couldn't parse file %s. %v", e.Name(), err)
-		}
-
-		merged.Boards = append(merged.Boards, c.Boards...)
-	}
-
-	return merged, nil
 }
 
 func writeFile(filename string, c FileContent) error {
