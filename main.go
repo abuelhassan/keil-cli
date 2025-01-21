@@ -3,13 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"io/fs"
 	"log"
 	"os"
 	"sort"
 
 	"github.com/abuelhassan/keil-cli/reader"
+	"github.com/abuelhassan/keil-cli/writer"
 
 	"github.com/urfave/cli/v3"
 )
@@ -44,14 +43,14 @@ func (b ByVendorThenName) Less(i, j int) bool {
 
 const (
 	// Flag names
-	flagDirectory = "dir"
-	flagOutput    = "out"
+	flagDirectory         = "dir"
+	flagOutput            = "out"
+	flagEnableIndentation = "enableIndentation"
 
 	defaultOutputFile = "out.json"
 )
 
 func main() {
-	rdr := reader.New()
 	cmd := &cli.Command{
 		Name:  "keil",
 		Usage: "Manages development boards on Arm Keil system",
@@ -74,11 +73,18 @@ func main() {
 						Aliases:  []string{"o"},
 						OnlyOnce: true,
 					},
+					&cli.BoolFlag{
+						Name:     flagEnableIndentation,
+						Usage:    "Enables Indentation in output",
+						Value:    false,
+						OnlyOnce: true,
+					},
 				},
 				Action: func(ctx context.Context, command *cli.Command) error {
 					path := command.String(flagDirectory)
+					enableIndentation := command.Bool(flagEnableIndentation)
 					boards := make([]Board, 0)
-					err := rdr.ReadDirectory(path, func(filePath string, data []byte) {
+					err := reader.New().ReadDirectory(path, func(filePath string, data []byte) {
 						c := FileContent{}
 						err := json.Unmarshal(data, &c)
 						if err != nil {
@@ -98,7 +104,10 @@ func main() {
 					if outputFile == "" {
 						outputFile = defaultOutputFile
 					}
-					err = writeFile(outputFile, merged)
+					err = writer.New().WriteFile(merged, outputFile, enableIndentation)
+					if err != nil {
+						log.Fatal(err)
+					}
 					return nil
 				},
 			},
@@ -116,18 +125,4 @@ func populateMetadata(c *FileContent) {
 	}
 	c.Metadata.TotalVendors = len(vendorsMp)
 	c.Metadata.TotalBoards = len(c.Boards)
-}
-
-func writeFile(filename string, c FileContent) error {
-	// TODO: Indentation can be optional based on a flag
-	data, err := json.MarshalIndent(c, "", "  ")
-	if err != nil {
-		return fmt.Errorf("couldn't marshal output %v", err)
-	}
-
-	err = os.WriteFile(filename, data, fs.ModePerm)
-	if err != nil {
-		return fmt.Errorf("couldn't write file %s. %v", filename, err)
-	}
-	return nil
 }
