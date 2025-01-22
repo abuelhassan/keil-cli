@@ -1,9 +1,9 @@
-# Editor
+# IDE
 .idea
 
 # Executable
 keil
-dist
+.dist
 
 # Output files
 out.json
