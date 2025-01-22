@@ -7,6 +7,8 @@ import (
 )
 
 type Writer interface {
+	// WriteFile writes passed object into a file with the provided filePath.
+	// enableIndentation if true, writes object as a prettified json.
 	WriteFile(obj interface{}, filePath string, enableIndentation bool) error
 }
 

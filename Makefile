@@ -1,4 +1,4 @@
-.PHONY: build clean dist dev-run test
+.PHONY: build test clean dist dev-run doc-server
 
 EXECUTABLE_NAME = keil
 
@@ -23,3 +23,6 @@ dev-run:
 	make build
 	./$(EXECUTABLE_NAME) merge -d testdata --enableIndentation
 	rm -f $(EXECUTABLE_NAME)
+
+doc-server:
+	godoc -http=:6060

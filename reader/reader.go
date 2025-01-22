@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 )
 
-// Reader reads boards from files
 type Reader interface {
 	// ReadDirectory reads all files in a directory and calls the parser on the read data
 	ReadDirectory(path string, parser func(filePath string, data []byte)) error

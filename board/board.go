@@ -14,13 +14,14 @@ type Metadata struct {
 	TotalBoards  int `json:"total_boards"`
 }
 
+// Summary contains the list of all appended boards with metadata
 type Summary struct {
-	// Boards sort boards by vendor then by name
 	Boards   []Board  `json:"boards"`
 	Metadata Metadata `json:"_metadata"`
 }
 
 // AppendBoards appends board to the existing ones, and updates the metadata object.
+// And sort all boards alphabetically by vendor then name.
 func (s *Summary) AppendBoards(boards []Board) {
 	s.Boards = append(s.Boards, boards...)
 	vendors := make(map[string]struct{})
