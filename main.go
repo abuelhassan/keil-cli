@@ -53,38 +53,44 @@ func main() {
 					},
 				},
 				Action: func(ctx context.Context, command *cli.Command) error {
-					path := command.String(flagDirectory)
+					rdr, wrt := reader.New(), writer.New()
+					dir := command.String(flagDirectory)
 					enableIndentation := command.Bool(flagEnableIndentation)
-					boards := make([]board.Board, 0)
-					err := reader.New().ReadDirectory(path, func(filePath string, data []byte) {
-						c := board.Summary{}
-						err := json.Unmarshal(data, &c)
-						if err != nil {
-							log.Fatalf("couldn't parse file %s. %v", filePath, err)
-						}
-						boards = append(boards, c.Boards...)
-					})
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					summary := board.Summary{}
-					summary.AppendBoards(boards)
-
 					outputFile := command.String(flagOutput)
 					if outputFile == "" {
 						outputFile = defaultOutputFile
 					}
-					err = writer.New().WriteFile(summary, outputFile, enableIndentation)
-					if err != nil {
-						log.Fatal(err)
-					}
+
+					mergeAction(dir, enableIndentation, outputFile, rdr, wrt)
 					return nil
 				},
 			},
 		},
 	}
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func mergeAction(dir string, enableIndentation bool, outputFile string, rdr reader.Reader, wrt writer.Writer) {
+	boards := make([]board.Board, 0)
+	err := rdr.ReadDirectory(dir, func(filePath string, data []byte) {
+		c := board.Summary{}
+		err := json.Unmarshal(data, &c)
+		if err != nil {
+			log.Fatalf("couldn't parse file %s. %v", filePath, err)
+		}
+		boards = append(boards, c.Boards...)
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	summary := board.Summary{}
+	summary.AppendBoards(boards)
+
+	err = wrt.WriteFile(summary, outputFile, enableIndentation)
+	if err != nil {
 		log.Fatal(err)
 	}
 }

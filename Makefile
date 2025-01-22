@@ -19,6 +19,7 @@ dist:
 	GOOS=windows GOARCH=amd64 go build -o ./dist/$(EXECUTABLE_NAME)-windows-amd64
 
 dev-run:
+	go fmt
 	make build
 	./$(EXECUTABLE_NAME) merge -d testdata --enableIndentation
 	rm -f $(EXECUTABLE_NAME)
