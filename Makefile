@@ -1,4 +1,4 @@
-.PHONY: build test clean dist dev-run doc-server
+.PHONY: build test clean dist dev-run doc-server dep
 
 EXECUTABLE_NAME = keil
 
@@ -26,3 +26,6 @@ dev-run:
 
 doc-server:
 	godoc -http=:6060
+
+dep:
+	go mod tidy
