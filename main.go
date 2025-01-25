@@ -79,7 +79,7 @@ func mergeAction(dir string, enableIndentation bool, outputFile string, rdr read
 		c := board.Summary{}
 		err := json.Unmarshal(data, &c)
 		if err != nil {
-			log.Fatalf("couldn't parse file %s. %v", filePath, err)
+			log.Printf("couldn't parse file %s. %v", filePath, err)
 		}
 		boards = append(boards, c.Boards...)
 	})
