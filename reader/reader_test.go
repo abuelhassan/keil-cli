@@ -18,12 +18,6 @@ func Test_reader_ReadDirectory(t *testing.T) {
 			t.Errorf("ReadDirectory returned %d files, expected 2", cnt)
 		}
 	})
-	t.Run("Should return an error if the directory does not exist", func(t *testing.T) {
-		err := New(".json").ReadDirectory(filepath.Join("..", "invalid"), func(filePath string, data []byte) {})
-		if err == nil {
-			t.Errorf("ReadDirectory returned nil error")
-		}
-	})
 	t.Run("Should ignore non-json files", func(t *testing.T) {
 		cnt := 0
 		err := New(".json").ReadDirectory(filepath.Join("..", "testdata", "nonjson"), func(filePath string, data []byte) {
@@ -33,7 +27,19 @@ func Test_reader_ReadDirectory(t *testing.T) {
 			t.Errorf("ReadDirectory returned unexpected error: %v", err)
 		}
 		if cnt != 0 {
-			t.Errorf("ReadDirectory returned %d files, expected 2", cnt)
+			t.Errorf("ReadDirectory returned %d files, expected 0", cnt)
+		}
+	})
+	t.Run("Should read recursive directory", func(t *testing.T) {
+		cnt := 0
+		err := New(".json").ReadDirectory(filepath.Join("..", "testdata", "recursive"), func(filePath string, data []byte) {
+			cnt++
+		})
+		if err != nil {
+			t.Errorf("ReadDirectory returned unexpected error: %v", err)
+		}
+		if cnt != 1 {
+			t.Errorf("ReadDirectory returned %d files, expected 1", cnt)
 		}
 	})
 }

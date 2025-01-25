@@ -21,22 +21,19 @@ type reader struct {
 }
 
 func (r *reader) ReadDirectory(path string, parser func(filePath string, data []byte)) error {
-	entries, err := os.ReadDir(path)
+	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if !strings.HasSuffix(info.Name(), r.extension) {
+			return nil
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("couldn't read file %s. %w", info.Name(), err)
+		}
+		parser(path, data)
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("couldn't read directory %s. %w", path, err)
 	}
-
-	for _, e := range entries {
-		if !strings.HasSuffix(e.Name(), r.extension) {
-			continue
-		}
-		filePath := filepath.Join(path, e.Name())
-		data, err := os.ReadFile(filePath)
-		if err != nil {
-			return fmt.Errorf("couldn't read file %s. %w", e.Name(), err)
-		}
-		parser(filePath, data)
-	}
-
 	return nil
 }
