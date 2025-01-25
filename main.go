@@ -20,6 +20,7 @@ const (
 	flagEnableIndentation = "enableIndentation"
 
 	defaultOutputFile = "out.json"
+	inputExtension    = ".json"
 )
 
 func main() {
@@ -53,7 +54,7 @@ func main() {
 					},
 				},
 				Action: func(ctx context.Context, command *cli.Command) error {
-					rdr, wrt := reader.New(), writer.New()
+					rdr, wrt := reader.New(inputExtension), writer.New()
 					dir := command.String(flagDirectory)
 					enableIndentation := command.Bool(flagEnableIndentation)
 					outputFile := command.String(flagOutput)

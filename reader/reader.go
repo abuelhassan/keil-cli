@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Reader interface {
@@ -11,11 +12,13 @@ type Reader interface {
 	ReadDirectory(path string, parser func(filePath string, data []byte)) error
 }
 
-func New() Reader {
-	return &reader{}
+func New(extension string) Reader {
+	return &reader{extension: extension}
 }
 
-type reader struct{}
+type reader struct {
+	extension string
+}
 
 func (r *reader) ReadDirectory(path string, parser func(filePath string, data []byte)) error {
 	entries, err := os.ReadDir(path)
@@ -24,6 +27,9 @@ func (r *reader) ReadDirectory(path string, parser func(filePath string, data []
 	}
 
 	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), r.extension) {
+			continue
+		}
 		filePath := filepath.Join(path, e.Name())
 		data, err := os.ReadFile(filePath)
 		if err != nil {
