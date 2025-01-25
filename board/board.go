@@ -1,6 +1,8 @@
 package board
 
-import "sort"
+import (
+	"slices"
+)
 
 type Board struct {
 	Name    string `json:"name"`
@@ -30,14 +32,16 @@ func (s *Summary) AppendBoards(boards []Board) {
 	}
 	s.Metadata.TotalBoards = len(s.Boards)
 	s.Metadata.TotalVendors = len(vendors)
-	sort.Sort(s)
-}
-
-func (s *Summary) Len() int      { return len(s.Boards) }
-func (s *Summary) Swap(i, j int) { s.Boards[i], s.Boards[j] = s.Boards[j], s.Boards[i] }
-func (s *Summary) Less(i, j int) bool {
-	if s.Boards[i].Vendor == s.Boards[j].Vendor {
-		return s.Boards[i].Name < s.Boards[j].Name
-	}
-	return s.Boards[i].Vendor < s.Boards[j].Vendor
+	slices.SortFunc(s.Boards, func(a, b Board) int {
+		if a.Vendor < b.Vendor {
+			return -1
+		}
+		if a.Vendor > b.Vendor {
+			return 1
+		}
+		if a.Name < b.Name {
+			return -1
+		}
+		return 1
+	})
 }
