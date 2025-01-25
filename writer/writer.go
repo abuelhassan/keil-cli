@@ -29,12 +29,12 @@ func (w *writer) WriteFile(obj interface{}, filePath string, enableIndentation b
 		data, err = json.Marshal(obj)
 	}
 	if err != nil {
-		return fmt.Errorf("couldn't marshal output %v", err)
+		return fmt.Errorf("couldn't marshal output %w", err)
 	}
 
 	err = os.WriteFile(filePath, data, os.ModePerm)
 	if err != nil {
-		return fmt.Errorf("couldn't write file %s. %v", filePath, err)
+		return fmt.Errorf("couldn't write file %s. %w", filePath, err)
 	}
 	return nil
 }
