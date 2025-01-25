@@ -1,5 +1,5 @@
 module github.com/abuelhassan/keil-cli
 
-go 1.23.0
+go 1.23
 
 require github.com/urfave/cli/v3 v3.0.0-beta1
